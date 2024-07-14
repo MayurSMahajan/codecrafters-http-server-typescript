@@ -19,7 +19,7 @@ const server = net.createServer((socket) => {
     if (strArr[1] === '/'){
       socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
     }else{
-      socket.write(Buffer.from(`HTTP/1.1 404 NOT FOUND\r\n\r\n`));
+      socket.write(Buffer.from(`HTTP/1.1 404 Not Found\r\n\r\n`));
     }
     socket.end();
     
