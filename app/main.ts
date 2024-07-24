@@ -24,11 +24,19 @@ const server = net.createServer((socket) => {
       const content = strArr[1].split("/")[2];
       if(content && content.length){
         socket.write(Buffer.from(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}\r\n\r\n`));
-        socket.end();
+      }else{
+        socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
       }
-      socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
-      
-    }else{
+    }
+    else if(strArr[1].split("/")[1] === 'user-agent'){
+      const uaInfo = req.split("User-Agent:")[1]?.split(' ')[1].trim();
+      if(uaInfo){
+        socket.write(Buffer.from(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${uaInfo.length}\r\n\r\n${uaInfo}\r\n\r\n`));
+      }else{
+        socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
+      }
+    }
+    else{
       socket.write(Buffer.from(`HTTP/1.1 404 Not Found\r\n\r\n`));
     }
 
