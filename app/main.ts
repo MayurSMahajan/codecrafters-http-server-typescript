@@ -25,45 +25,62 @@ const server = net.createServer((socket) => {
     const strArr = req.split(' ');
     const param = strArr[1].split("/")[1];
     
-    if (strArr[1] === '/'){
-      changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
-    }
-    else if(param === 'echo'){
-      const content = strArr[1].split("/")[2];
-      if(content && content.length){
-        const res = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}\r\n\r\n`;
-        changeResponse(res);
-      }else{
+    if(strArr[0] === 'GET'){
+      if (strArr[1] === '/'){
         changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
       }
-    }
-    else if(param === 'user-agent'){
-      const uaInfo = req.split("User-Agent:")[1]?.split(' ')[1].trim();
-      if(uaInfo){
-        const res = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${uaInfo.length}\r\n\r\n${uaInfo}\r\n\r\n`;
-        changeResponse(res);
-      }else{
-        changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
+      else if(param === 'echo'){
+        const content = strArr[1].split("/")[2];
+        if(content && content.length){
+          const res = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}\r\n\r\n`;
+          changeResponse(res);
+        }else{
+          changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
+        }
       }
-    }
-    else if(param === 'files'){
-      const args = process.argv.slice(2);
-      const [___, absPath] = args;
-      const path = strArr[1].split("/")[2];
-      const filePath = absPath + "/" + path;
-
-      try{
-        const content = fs.readFileSync(filePath);
-        const res = `HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${content.length}\r\n\r\n${content}`;
-        changeResponse(res);
-      }catch(error){
+      else if(param === 'user-agent'){
+        const uaInfo = req.split("User-Agent:")[1]?.split(' ')[1].trim();
+        if(uaInfo){
+          const res = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${uaInfo.length}\r\n\r\n${uaInfo}\r\n\r\n`;
+          changeResponse(res);
+        }else{
+          changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
+        }
+      }
+      else if(param === 'files'){
+        const args = process.argv.slice(2);
+        const [___, absPath] = args;
+        const path = strArr[1].split("/")[2];
+        const filePath = absPath + "/" + path;
+  
+        try{
+          const content = fs.readFileSync(filePath);
+          const res = `HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${content.length}\r\n\r\n${content}`;
+          changeResponse(res);
+        }catch(error){
+          changeResponse(`HTTP/1.1 404 Not Found\r\n\r\n`);
+        }
+      }
+      else{
         changeResponse(`HTTP/1.1 404 Not Found\r\n\r\n`);
       }
     }
-    else{
-      changeResponse(`HTTP/1.1 404 Not Found\r\n\r\n`);
-    }
+    else if(strArr[0] === 'POST'){
+      if(param === 'files'){
+        const args = process.argv.slice(2);
+        const [___, absPath] = args;
+        const path = strArr[1].split("/")[2];
+        const filePath = absPath  + path;
 
+        const body = req.split("\r\n\r\n")[1];
+        try{
+          fs.writeFileSync(filePath, body);
+          changeResponse(`HTTP/1.1 201 Created\r\n\r\n`);
+        }catch(error){
+          changeResponse(`HTTP/1.1 500 Internal Server Error\r\n\r\n`);
+        }
+      }
+    }
     socket.end();
     
   })
