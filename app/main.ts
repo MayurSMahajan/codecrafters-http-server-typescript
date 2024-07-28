@@ -24,6 +24,7 @@ const server = net.createServer((socket) => {
     // GET /abcdef HTTP1.1 ...
     const strArr = req.split(' ');
     const param = strArr[1].split("/")[1];
+    const compressionMethod = req.split("Accept-Encoding:")[1]?.split(' ')[1].trim();
     
     if(strArr[0] === 'GET'){
       if (strArr[1] === '/'){
@@ -31,12 +32,23 @@ const server = net.createServer((socket) => {
       }
       else if(param === 'echo'){
         const content = strArr[1].split("/")[2];
+        let statusLine = `HTTP/1.1 200 OK\r\n`;
+        let headers = '';
+
         if(content && content.length){
-          const res = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}\r\n\r\n`;
-          changeResponse(res);
-        }else{
-          changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
+          headers = `Content-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}`;
         }
+
+        if(compressionMethod === 'gzip'){
+          headers = `Content-Encoding: gzip\r\n` + headers;
+        }
+
+        if(headers){
+          changeResponse(statusLine + headers + '\r\n\r\n');
+        }else{
+          changeResponse(statusLine + '\r\n')
+        }
+
       }
       else if(param === 'user-agent'){
         const uaInfo = req.split("User-Agent:")[1]?.split(' ')[1].trim();
