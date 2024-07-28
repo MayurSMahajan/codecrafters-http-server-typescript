@@ -1,4 +1,3 @@
-import { Socket } from "dgram";
 import * as net from "net";
 import fs from "node:fs";
 import zlib from "node:zlib";
@@ -94,7 +93,10 @@ const server = net.createServer((socket) => {
           socket.write(Buffer.from(`HTTP/1.1 500 Internal Server Error\r\n\r\n`));
         }
     }
-    
+    else{
+      socket.write(Buffer.from(`HTTP/1.1 404 Not Found\r\n\r\n`));
+    }
+
     socket.end();
   })
 });
