@@ -7,7 +7,7 @@ console.log("Logs from your program will appear here!");
 
 // Uncomment this to pass the first stage
 const server = net.createServer((socket) => {
-  // socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
+  
   socket.on("close", () => {
     socket.end();
   });
@@ -20,20 +20,16 @@ const server = net.createServer((socket) => {
   socket.on("data", (data) => {
     // convert byte data into 
     const req = data.toString();
-    
-    // splitting the string using whitespace since a typical data will look like
-    // GET /abcdef HTTP1.1 ...
-    const strArr = req.split(' ');
-    const param = strArr[1].split("/")[1];
+    const [method, path, _] = req.split('\r\n')[0].split(' ');
   
     const compressionMethods = req.split("Accept-Encoding:")[1]?.split('\r\n')[0]?.split(', ');
 
-    if(strArr[0] === 'GET'){
-      if (strArr[1] === '/'){
-        changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
+    if(method === 'GET'){
+      if (path === '/'){
+        socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
       }
-      else if(param === 'echo'){
-        const content = strArr[1].split("/")[2];
+      else if(path.startsWith('/echo/')){
+        const content = path.split("/")[2];
         let statusLine = `HTTP/1.1 200 OK\r\n`;
         let headers = '';
         let compressedBody;
@@ -61,7 +57,7 @@ const server = net.createServer((socket) => {
           changeResponse(statusLine + '\r\n')
         }
       }
-      else if(param === 'user-agent'){
+      else if(path.startsWith('/user-agent/')){
         const uaInfo = req.split("User-Agent:")[1]?.split(' ')[1].trim();
         if(uaInfo){
           const res = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${uaInfo.length}\r\n\r\n${uaInfo}\r\n\r\n`;
@@ -70,11 +66,11 @@ const server = net.createServer((socket) => {
           changeResponse(`HTTP/1.1 200 OK\r\n\r\n`);
         }
       }
-      else if(param === 'files'){
+      else if(path.startsWith('/files/')){
         const args = process.argv.slice(2);
         const [___, absPath] = args;
-        const path = strArr[1].split("/")[2];
-        const filePath = absPath + "/" + path;
+        const subpath = path[1].split("/")[2];
+        const filePath = absPath + "/" + subpath;
   
         try{
           const content = fs.readFileSync(filePath);
@@ -88,12 +84,11 @@ const server = net.createServer((socket) => {
         changeResponse(`HTTP/1.1 404 Not Found\r\n\r\n`);
       }
     }
-    else if(strArr[0] === 'POST'){
-      if(param === 'files'){
+    else if(method === 'POST' &&  path.startsWith('/files/')){
         const args = process.argv.slice(2);
         const [___, absPath] = args;
-        const path = strArr[1].split("/")[2];
-        const filePath = absPath  + path;
+        const subpath = path.split("/")[2];
+        const filePath = absPath  + subpath;
 
         const body = req.split("\r\n\r\n")[1];
         try{
@@ -102,10 +97,9 @@ const server = net.createServer((socket) => {
         }catch(error){
           changeResponse(`HTTP/1.1 500 Internal Server Error\r\n\r\n`);
         }
-      }
     }
+
     socket.end();
-    
   })
 });
 
