@@ -24,7 +24,8 @@ const server = net.createServer((socket) => {
     // GET /abcdef HTTP1.1 ...
     const strArr = req.split(' ');
     const param = strArr[1].split("/")[1];
-    const compressionMethod = req.split("Accept-Encoding:")[1]?.split(' ')[1].trim();
+  
+    const compressionMethods = req.split("Accept-Encoding:")[1]?.split('\r\n')[0]?.split(', ');
     
     if(strArr[0] === 'GET'){
       if (strArr[1] === '/'){
@@ -39,7 +40,7 @@ const server = net.createServer((socket) => {
           headers = `Content-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}`;
         }
 
-        if(compressionMethod === 'gzip'){
+        if(compressionMethods.find((a) => a.trim() === 'gzip')){
           headers = `Content-Encoding: gzip\r\n` + headers;
         }
 
