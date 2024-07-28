@@ -40,7 +40,7 @@ const server = net.createServer((socket) => {
           headers = `Content-Type: text/plain\r\nContent-Length: ${content.length}\r\n\r\n${content}`;
         }
 
-        if(compressionMethods.find((a) => a.trim() === 'gzip')){
+        if(compressionMethods?.find((a) => a.trim() === 'gzip')){
           headers = `Content-Encoding: gzip\r\n` + headers;
         }
 
